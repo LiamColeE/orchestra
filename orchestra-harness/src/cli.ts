@@ -1,4 +1,6 @@
 import { createInterface } from 'readline';
+import { mkdirSync, writeFileSync } from 'fs';
+import { resolve } from 'path';
 import { loadConfig, type DisplayConfig } from './config.js';
 import { type ChatMessage } from './agent.js';
 import { MultiAgentHarness } from './harness.js';
@@ -149,6 +151,21 @@ function borderedReadLine(borderColor = GRAY): Promise<string> {
   });
 }
 
+async function promptForApiKey(): Promise<string> {
+  console.log(`${YELLOW}  No OPENROUTER_API_KEY found.${RESET}`);
+  console.log(`  ${DIM}Enter your OpenRouter API key (or set OPENROUTER_API_KEY env var):${RESET}`);
+  const key = await borderedReadLine(YELLOW);
+  if (!key.trim()) {
+    console.log(`\n${YELLOW}  API key is required to continue.${RESET}\n`);
+    process.exit(1);
+  }
+  const keyPath = resolve(`${process.env.HOME ?? process.env.USERPROFILE}/.config/orchestra`);
+  mkdirSync(keyPath, { recursive: true });
+  writeFileSync(`${keyPath}/key.txt`, key.trim());
+  console.log(`  ${GREEN}API key saved to ~/.config/orchestra/key.txt${RESET}\n`);
+  return key.trim();
+}
+
 async function main() {
   const argBanner = parseArg('--banner');
   const argModel = parseArg('--model');
@@ -171,6 +188,11 @@ async function main() {
 
   const config = loadConfig(overrides, { skipApiKey: demoMode || demoLoaderMode });
   const BG_INPUT = config.display.inputStyle === 'block' ? await detectBg() : '';
+
+  if (!config.apiKey && !demoMode && !demoLoaderMode) {
+    const key = await promptForApiKey();
+    config.apiKey = key;
+  }
 
   initSessionDir(config.sessionDir);
   let sessionPath = newSessionPath(config.sessionDir);

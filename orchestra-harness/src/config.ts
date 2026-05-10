@@ -56,6 +56,11 @@ export function loadConfig(overrides: Partial<AgentConfig> = {}, opts?: { skipAp
   if (process.env.AGENT_MAX_COST) config.maxCost = Number(process.env.AGENT_MAX_COST);
   if (process.env.AGENT_CONTEXT_THRESHOLD) config.contextThreshold = Number(process.env.AGENT_CONTEXT_THRESHOLD);
 
+  const storedKeyPath = resolve(`${process.env.HOME ?? process.env.USERPROFILE}/.config/orchestra/key.txt`);
+  if (!config.apiKey && existsSync(storedKeyPath)) {
+    config.apiKey = readFileSync(storedKeyPath, 'utf-8').trim();
+  }
+
   if (overrides.display) {
     config.display = { ...config.display, ...overrides.display };
   }
@@ -63,7 +68,6 @@ export function loadConfig(overrides: Partial<AgentConfig> = {}, opts?: { skipAp
     config.roles = { ...config.roles, ...overrides.roles };
   }
   config = { ...config, ...overrides, display: config.display, roles: config.roles };
-  if (!config.apiKey && !opts?.skipApiKey) throw new Error('OPENROUTER_API_KEY is required.');
   return config;
 }
 
