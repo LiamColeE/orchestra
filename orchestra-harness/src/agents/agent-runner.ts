@@ -22,13 +22,17 @@ export async function runAgent(
     maxSteps?: number;
     maxCost?: number;
     allowedTools?: string[];
+    additionalTools?: any[];
   },
 ) {
   const client = new OpenRouter({ apiKey: config.apiKey });
 
-  const effectiveTools = options?.allowedTools
+  const baseTools = options?.allowedTools
     ? tools.filter((t: any) => options.allowedTools!.includes(t.name))
     : tools;
+  const effectiveTools = options?.additionalTools
+    ? [...baseTools, ...options.additionalTools]
+    : baseTools;
 
   const instructions = (options?.systemPrompt ?? config.systemPrompt).replace('{cwd}', process.cwd());
 
@@ -95,6 +99,7 @@ export async function runAgentWithRetry(
     maxSteps?: number;
     maxCost?: number;
     allowedTools?: string[];
+    additionalTools?: any[];
   },
 ) {
   for (let attempt = 0, max = options?.maxRetries ?? 3; attempt <= max; attempt++) {

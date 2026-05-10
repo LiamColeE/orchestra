@@ -330,14 +330,6 @@ async function main() {
       }
     });
 
-    harness.onContextWarning(async (usage) => {
-      process.stdout.write(`\n${YELLOW}  Context at ${usage.percentageUsed.toFixed(1)}%. Prune? (yes/no): ${RESET}`);
-      return new Promise<boolean>((resolve) => {
-        rl.question('', (answer) => {
-          resolve(answer.trim().toLowerCase().startsWith('y'));
-        });
-      });
-    });
 
     while (true) {
       const input = await getInput();
